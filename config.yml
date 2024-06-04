@@ -1,0 +1,9 @@
+default:
+  physio_df_file: 'HERA_df_physio_all_11-6-2023.csv'
+  data_dir: 'data'
+  hera_roles_ID_file: 'HERA_Roles_to_IDs_C5_C6.xlsx'
+  team_perf_dir: 'NASA_standard_meas/team_perf'
+  jh_trait_file: 'HERA_trait_C5_C6.csv'
+  ipip_dir: 'NASA_standard_meas/ipip'
+  cohese_dir: 'NASA_standard_meas/cohesion'
+  wl_dir: 'NASA_standard_meas/workload'
