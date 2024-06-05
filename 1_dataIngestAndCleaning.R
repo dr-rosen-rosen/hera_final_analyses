@@ -52,11 +52,31 @@ getAggPhysioMetrics <- function(df) {
       values_from = ends_with("_2"),
       names_glue = "mean_{task_category}_{.value}"
     )
+  
+  task_cat_df_2 <- df |>
+    mutate(task_category_v2 = case_when(
+      str_detect(task_category, 'team|dyad') ~ 'tot_team_task',
+      str_detect(task_category,'social') ~ 'tot_social',
+      .default = task_category
+    )) |>
+      group_by(team,mission_day,part_id,task_category_v2) %>%
+      summarize(across(ends_with("_2"), ~ mean(.x, na.rm = TRUE))
+      ) |>
+      pivot_wider(
+        id_cols = c(team,mission_day,part_id),
+        names_from = task_category_v2,
+        values_from = ends_with("_2"),
+        names_glue = "mean_{task_category_v2}_{.value}"
+      )
+  
   daily_sum_df <- df %>%
     select(-task_category) %>%
     group_by(team,mission_day,part_id) %>%
     summarize(across(ends_with("_2"), ~ mean(.x, na.rm = TRUE), .names = '{.col}_daily_mean'))
-  df <- daily_sum_df %>% full_join(task_cat_df, by = c('team','mission_day','part_id'))
+  df <- daily_sum_df |>
+    full_join(task_cat_df, by = c('team','mission_day','part_id')) |>
+    full_join(task_cat_df_2, by = c('team','mission_day','part_id'))
+  
   return(df)
 }
 
@@ -143,13 +163,12 @@ getWorkload <- function(f_list) {
 
 physio_df <- getPhysio(
   f = config$physio_df_file,
-  data_dir = config$data_dir
-) %>%
-  getAndMergeHERA_IDs(
-    physio_df = .,
+  data_dir = config$data_dir)
+physio_df <- getAndMergeHERA_IDs(
+    physio_df = physio_df,
     data_dir = config$data_dir,
-    role_file = config$hera_roles_ID_file) %>%
-  getAggPhysioMetrics(.)
+    role_file = config$hera_roles_ID_file) 
+physio_df <-getAggPhysioMetrics(physio_df)
 
 # physio_df %>% select(starts_with('cardiac')) %>% select(-ends_with('s_e_2')) %>% #skimr::skim(.)
 #   modelsummary::datasummary_correlation()
